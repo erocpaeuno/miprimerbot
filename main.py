@@ -15,7 +15,7 @@ def run_web_server():
     server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
     server.serve_forever()
 
-# --- AQUÍ DEFINIMOS LAS FUNCIONES QUE LE FALTABAN A TU BOT ---
+# --- FUNCIONES DEL BOT ---
 async def start(update, context):
     await update.message.reply_text("¡Hola! Soy tu primer bot en la nube.")
 
