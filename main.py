@@ -22,7 +22,6 @@ async def start(update, context):
 async def responder(update, context):
     texto_usuario = update.message.text
     await update.message.reply_text(f"Me dijiste: {texto_usuario}")
-# -------------------------------------------------------------
 
 if __name__ == '__main__':
     TOKEN = os.environ.get("TELEGRAM_TOKEN")
