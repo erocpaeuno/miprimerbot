@@ -1,6 +1,9 @@
 import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
+# ESTA ES LA LÍNEA QUE FALTA AGREGAR:
+from telegram.ext import Application, CommandHandler, MessageHandler, filters 
+
 
 # Clase para simular un servidor web básico
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
