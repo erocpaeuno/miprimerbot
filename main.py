@@ -1,4 +1,5 @@
 import os
+import asyncio
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
@@ -23,16 +24,28 @@ async def responder(update, context):
     texto_usuario = update.message.text
     await update.message.reply_text(f"Me dijiste: {texto_usuario}")
 
-if __name__ == '__main__':
+async def main():
     TOKEN = os.environ.get("TELEGRAM_TOKEN")
     
     # Iniciar el servidor web en un hilo secundario
     threading.Thread(target=run_web_server, daemon=True).start()
     
-    # Iniciar el bot de Telegram
+    # Configurar e iniciar el bot de Telegram de forma asíncrona segura
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder))
     
     print("El bot está funcionando...")
-    app.run_polling()
+    
+    # Inicializar y arrancar el bot correctamente en la nube
+    await app.initialize()
+    await app.updater.start_polling()
+    await app.start()
+    
+    # Mantener el bot corriendo sin bloquear el sistema
+    while True:
+        await asyncio.sleep(3600)
+
+if __name__ == '__main__':
+    # Ejecutar la función principal con el bucle de asyncio correcto
+    asyncio.run(main())
