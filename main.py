@@ -1,9 +1,7 @@
 import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
-# ESTA ES LA LÍNEA QUE FALTA AGREGAR:
-from telegram.ext import Application, CommandHandler, MessageHandler, filters 
-
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 # Clase para simular un servidor web básico
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
@@ -17,8 +15,17 @@ def run_web_server():
     server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
     server.serve_forever()
 
+# --- AQUÍ DEFINIMOS LAS FUNCIONES QUE LE FALTABAN A TU BOT ---
+async def start(update, context):
+    await update.message.reply_text("¡Hola! Soy tu primer bot en la nube.")
+
+async def responder(update, context):
+    texto_usuario = update.message.text
+    await update.message.reply_text(f"Me dijiste: {texto_usuario}")
+# -------------------------------------------------------------
+
 if __name__ == '__main__':
-    TOKEN = os.environ.get("TELEGRAM_TOKEN") # Usaremos variables de entorno por seguridad
+    TOKEN = os.environ.get("TELEGRAM_TOKEN")
     
     # Iniciar el servidor web en un hilo secundario
     threading.Thread(target=run_web_server, daemon=True).start()
