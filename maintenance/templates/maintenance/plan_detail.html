@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>{{ plan.service_name }} | Mantenimiento</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <p><a href="{% url 'maintenance:index' %}">Volver a mantenimiento</a></p>
+    <h1>{{ plan.service_name }} — {{ plan.motorcycle.plate }}</h1>
+    {% if messages %}
+      <ul>{% for message in messages %}<li role="status">{{ message }}</li>{% endfor %}</ul>
+    {% endif %}
+    <dl>
+      <dt>Motocicleta</dt>
+      <dd><a href="{{ plan.motorcycle.get_absolute_url }}">{{ plan.motorcycle }}</a></dd>
+      <dt>Cliente</dt><dd>{{ plan.motorcycle.customer.full_name }}</dd>
+      <dt>Estado</dt><dd>{{ plan.get_status_display }}</dd>
+      {% if plan.last_completed_at %}<dt>Última fecha</dt><dd>{{ plan.last_completed_at }}</dd>{% endif %}
+      {% if plan.last_completed_mileage is not None %}<dt>Último kilometraje</dt><dd>{{ plan.last_completed_mileage }} km</dd>{% endif %}
+      {% if plan.due_date %}<dt>Próxima fecha</dt><dd>{{ plan.due_date }}</dd>{% endif %}
+      {% if plan.due_mileage is not None %}<dt>Próximo kilometraje</dt><dd>{{ plan.due_mileage }} km</dd>{% endif %}
+      <dt>Kilometraje actual</dt><dd>{{ plan.motorcycle.current_mileage }} km</dd>
+      <dt>Alerta</dt><dd>{% if plan.is_due %}Vencido{% else %}Dentro del plazo{% endif %}</dd>
+      {% if plan.notes %}<dt>Notas</dt><dd>{{ plan.notes }}</dd>{% endif %}
+    </dl>
+    {% if can_manage %}
+      <p><a href="{% url 'maintenance:plan_update' plan.pk %}">Editar plan</a></p>
+    {% endif %}
+
+    <h2>Historial de servicios de esta motocicleta</h2>
+    <ul>
+      {% for record in records %}
+        <li>
+          {{ record.completed_at }} — {{ record.mileage }} km —
+          Orden <a href="{{ record.work_order.get_absolute_url }}">{{ record.work_order.order_number }}</a>
+          <ul>
+            {% for item in record.summary.splitlines %}<li>{{ item }}</li>{% endfor %}
+          </ul>
+        </li>
+      {% empty %}
+        <li>Aún no hay órdenes entregadas para esta motocicleta.</li>
+      {% endfor %}
+    </ul>
+
+    <h2>Recordatorios</h2>
+    <p>
+      La aplicación solo registra el recordatorio. No envía mensajes ni se
+      conecta a Telegram en esta fase. Marca un envío únicamente después de
+      haberlo realizado por el canal indicado.
+    </p>
+    {% if reminder_form %}
+      <form method="post" action="{% url 'maintenance:reminder_create' plan.pk %}">
+        {% csrf_token %}
+        {{ reminder_form.as_p }}
+        <button type="submit">Programar registro</button>
+      </form>
+    {% endif %}
+    <ul>
+      {% for reminder in plan.reminders.all %}
+        <li>
+          {{ reminder.scheduled_for }} — {{ reminder.get_channel_display }}
+          — {{ reminder.get_status_display }}
+          {% if can_view_reminder_details %}
+            — programado por {{ reminder.created_by }}
+            {% if reminder.sent_by %} — registrado por {{ reminder.sent_by }} el {{ reminder.sent_at }}{% endif %}
+            {% if reminder.note %} — {{ reminder.note }}{% endif %}
+          {% endif %}
+          {% if can_manage_reminders and reminder.status == "pending" %}
+            <form method="post" action="{% url 'maintenance:reminder_mark_sent' reminder.pk %}">
+              {% csrf_token %}
+              <label for="sent-note-{{ reminder.pk }}">Constancia del envío</label>
+              <input id="sent-note-{{ reminder.pk }}" name="note" required maxlength="300">
+              <button type="submit">Registrar envío manual</button>
+            </form>
+            <form method="post" action="{% url 'maintenance:reminder_update_status' reminder.pk %}">
+              {% csrf_token %}
+              <label for="status-{{ reminder.pk }}">Cerrar recordatorio</label>
+              <select id="status-{{ reminder.pk }}" name="status">
+                <option value="failed">Fallido</option>
+                <option value="cancelled">Cancelado</option>
+              </select>
+              <label for="status-note-{{ reminder.pk }}">Motivo</label>
+              <input id="status-note-{{ reminder.pk }}" name="note" maxlength="300">
+              <button type="submit">Actualizar</button>
+            </form>
+          {% endif %}
+        </li>
+      {% empty %}
+        <li>No hay recordatorios registrados.</li>
+      {% endfor %}
+    </ul>
+  </main>
+</body>
+</html>

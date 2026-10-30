@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>{{ part.name }} | Inventario</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>{{ part.name }} ({{ part.sku }})</h1>
+    <p>{{ part.description|default:"Sin descripción" }}</p>
+    <dl>
+      <dt>Existencia</dt><dd>{{ part.stock }} {{ part.unit }}</dd>
+      <dt>Precio referencial</dt><dd>S/ {{ part.unit_price }}</dd>
+      <dt>Nivel de reposición</dt><dd>{{ part.reorder_level }} {{ part.unit }}</dd>
+      <dt>Estado</dt><dd>{% if part.active %}Activo{% else %}Inactivo{% endif %}</dd>
+    </dl>
+    {% if perms.inventory.manage %}
+      <p><a href="{% url 'inventory:part_update' part.pk %}">Editar repuesto</a></p>
+      <p><a href="{% url 'inventory:movement_create' part.pk %}">Registrar movimiento</a></p>
+    {% endif %}
+    <h2>Últimos movimientos</h2>
+    <ul>
+      {% for movement in movements %}
+        <li>
+          {{ movement.get_movement_type_display }}:
+          {{ movement.quantity }} {{ part.unit }} — {{ movement.note }}
+          — {{ movement.created_at }} — {{ movement.created_by }}
+        </li>
+      {% empty %}
+        <li>No hay movimientos registrados.</li>
+      {% endfor %}
+    </ul>
+    <p><a href="{% url 'inventory:part_list' %}">Volver a repuestos</a></p>
+  </main>
+</body>
+</html>

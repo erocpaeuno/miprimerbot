@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>{{ motorcycle.plate }} | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>{{ motorcycle.plate }}</h1>
+    <dl>
+      <dt>Marca</dt><dd>{{ motorcycle.make }}</dd>
+      <dt>Modelo</dt><dd>{{ motorcycle.model }}</dd>
+      <dt>Año</dt><dd>{{ motorcycle.year|default:"No registrado" }}</dd>
+      <dt>Tipo</dt><dd>{{ motorcycle.motorcycle_type|default:"No especificado" }}</dd>
+      <dt>Kilometraje</dt><dd>{{ motorcycle.current_mileage }} km</dd>
+      <dt>Cliente</dt>
+      <dd><a href="{{ motorcycle.customer.get_absolute_url }}">{{ motorcycle.customer.full_name }}</a></dd>
+    </dl>
+    <p><a href="{% url 'customers:motorcycle_update' motorcycle.pk %}">Editar motocicleta</a></p>
+    <p><a href="{% url 'customers:motorcycle_list' %}">Volver a motocicletas</a></p>
+  </main>
+</body>
+</html>

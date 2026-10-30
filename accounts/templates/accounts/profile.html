@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Perfil | Taller</title>
+</head>
+<body>
+  <main>
+    <h1>Cuenta del personal</h1>
+    <p>Usuario: {{ user.get_full_name|default:user.username }}</p>
+    <p>Rol: {{ user.get_role_display }}</p>
+    <h2>Gestión del taller</h2>
+    <nav aria-label="Módulos de gestión">
+      <ul>
+        {% if "customers.manage_customers" in capabilities %}
+          <li><a href="{% url 'customers:customer_list' %}">Clientes</a></li>
+          <li><a href="{% url 'customers:customer_create' %}">Registrar cliente</a></li>
+        {% endif %}
+        {% if "vehicles.manage_vehicles" in capabilities %}
+          <li><a href="{% url 'customers:motorcycle_list' %}">Motocicletas</a></li>
+        {% endif %}
+        {% if "catalog.view_services" in capabilities %}
+          <li><a href="{% url 'catalog:service_list' %}">Catálogo de servicios</a></li>
+        {% endif %}
+        {% if "inventory.view" in capabilities %}
+          <li><a href="{% url 'inventory:part_list' %}">Inventario de repuestos</a></li>
+        {% endif %}
+        {% if "workorders.view_all" in capabilities or "workorders.view_assigned" in capabilities %}
+          <li><a href="{% url 'workorders:list' %}">Órdenes de trabajo</a></li>
+        {% endif %}
+        {% if "maintenance.view" in capabilities %}
+          <li><a href="{% url 'maintenance:index' %}">Mantenimiento</a></li>
+        {% endif %}
+        {% if "finance.cash.manage" in capabilities %}
+          <li><a href="{% url 'finance:index' %}">Caja y reportes</a></li>
+        {% endif %}
+        {% if "messaging.manage" in capabilities %}
+          <li><a href="{% url 'messaging:offers' %}">Ofertas por Telegram</a></li>
+        {% endif %}
+        {% if user.is_superuser %}
+          <li><a href="{% url 'admin:index' %}">Administración del sistema</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+    <h2>Permisos del rol</h2>
+    <ul>
+      {% for capability in capabilities %}
+        <li>{{ capability }}</li>
+      {% empty %}
+        <li>No hay permisos configurados.</li>
+      {% endfor %}
+    </ul>
+    <form method="post" action="{% url 'accounts:logout' %}">
+      {% csrf_token %}
+      <button type="submit">Cerrar sesión</button>
+    </form>
+  </main>
+</body>
+</html>

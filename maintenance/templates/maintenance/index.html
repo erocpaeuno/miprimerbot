@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Mantenimiento | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>Mantenimiento de motocicletas</h1>
+    <nav aria-label="Gestión del taller">
+      <a href="{% url 'customers:motorcycle_list' %}">Motocicletas</a>
+      <a href="{% url 'workorders:list' %}">Órdenes</a>
+      <a href="{% url 'inventory:part_list' %}">Inventario</a>
+    </nav>
+    {% if messages %}
+      <ul>{% for message in messages %}<li role="status">{{ message }}</li>{% endfor %}</ul>
+    {% endif %}
+    {% if can_manage %}
+      <p><a href="{% url 'maintenance:plan_create' %}">Programar mantenimiento</a></p>
+    {% endif %}
+    <section>
+      <h2>Mantenimientos vencidos</h2>
+      <ul>
+        {% for plan in due_plans %}
+          <li>
+            <a href="{% url 'maintenance:plan_detail' plan.pk %}">
+              {{ plan.motorcycle.plate }} — {{ plan.service_name }}
+            </a>
+            {% if plan.date_is_due %} — Fecha vencida{% endif %}
+            {% if plan.mileage_is_due %} — Kilometraje alcanzado{% endif %}
+          </li>
+        {% empty %}
+          <li>No hay mantenimientos vencidos.</li>
+        {% endfor %}
+      </ul>
+    </section>
+    <section>
+      <h2>Planes</h2>
+      <ul>
+        {% for plan in plans %}
+          <li>
+            <a href="{{ plan.get_absolute_url }}">
+              {{ plan.motorcycle.plate }} — {{ plan.service_name }}
+            </a>
+            — {{ plan.get_status_display }}
+            {% if plan.due_date %} — fecha: {{ plan.due_date }}{% endif %}
+            {% if plan.due_mileage %} — km: {{ plan.due_mileage }}{% endif %}
+            {% if plan.is_due %} — Vencido{% endif %}
+          </li>
+        {% empty %}
+          <li>No hay planes de mantenimiento registrados.</li>
+        {% endfor %}
+      </ul>
+    </section>
+    <section>
+      <h2>Historial de servicios entregados</h2>
+      <ul>
+        {% for record in history %}
+          <li>
+            {{ record.completed_at }} — {{ record.motorcycle.plate }} —
+            {{ record.mileage }} km —
+            Orden <a href="{{ record.work_order.get_absolute_url }}">{{ record.work_order.order_number }}</a>
+            <ul>
+              {% for item in record.summary.splitlines %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          </li>
+        {% empty %}
+          <li>Las órdenes entregadas aparecerán aquí.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

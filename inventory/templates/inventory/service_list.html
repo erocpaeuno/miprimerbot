@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Servicios | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>Catálogo de servicios</h1>
+    <nav aria-label="Catálogo e inventario">
+      <a href="{% url 'catalog:service_list' %}">Servicios</a>
+      <a href="{% url 'inventory:part_list' %}">Repuestos</a>
+    </nav>
+    {% if perms.catalog.manage_services %}
+      <p><a href="{% url 'catalog:service_create' %}">Registrar servicio</a></p>
+    {% endif %}
+    <form method="get">
+      <label for="q">Buscar servicio</label>
+      <input id="q" name="q" value="{{ query }}">
+      <button type="submit">Buscar</button>
+    </form>
+    <ul>
+      {% for service in services %}
+        <li>
+          {{ service.name }} — S/ {{ service.default_price }}
+          {% if service.estimated_minutes %} — {{ service.estimated_minutes }} min{% endif %}
+          {% if not service.active %} — Inactivo{% endif %}
+          {% if perms.catalog.manage_services %}
+            <a href="{% url 'catalog:service_update' service.pk %}">Editar</a>
+          {% endif %}
+        </li>
+      {% empty %}
+        <li>No hay servicios registrados.</li>
+      {% endfor %}
+    </ul>
+  </main>
+</body>
+</html>

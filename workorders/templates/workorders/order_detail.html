@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>{{ work_order.order_number }} | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <p><a href="{% url 'workorders:list' %}">Volver a órdenes</a></p>
+    <h1>Orden {{ work_order.order_number }}</h1>
+    {% if messages %}
+      <ul>
+        {% for message in messages %}
+          <li role="status">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <dl>
+      <dt>Estado</dt><dd>{{ work_order.get_status_display }}</dd>
+      <dt>Cliente</dt>
+      <dd><a href="{{ work_order.customer.get_absolute_url }}">{{ work_order.customer.full_name }}</a></dd>
+      <dt>Motocicleta</dt>
+      <dd><a href="{{ work_order.motorcycle.get_absolute_url }}">{{ work_order.motorcycle }}</a></dd>
+      <dt>Kilometraje al recibir</dt><dd>{{ work_order.mileage }} km</dd>
+      <dt>Motivo</dt><dd>{{ work_order.complaint }}</dd>
+      <dt>Diagnóstico</dt><dd>{{ work_order.diagnosis|default:"Pendiente" }}</dd>
+      <dt>Técnico</dt>
+      <dd>{{ work_order.assigned_to.get_full_name|default:work_order.assigned_to.username|default:"Sin asignar" }}</dd>
+      <dt>Registrada por</dt><dd>{{ work_order.created_by.get_full_name|default:work_order.created_by.username }}</dd>
+      <dt>Fecha de apertura</dt><dd>{{ work_order.opened_at }}</dd>
+      {% if work_order.closed_at %}<dt>Fecha de entrega</dt><dd>{{ work_order.closed_at }}</dd>{% endif %}
+      {% if work_order.notes %}<dt>Notas internas</dt><dd>{{ work_order.notes }}</dd>{% endif %}
+    </dl>
+
+    {% if can_change_details %}
+      <p><a href="{% url 'workorders:update' work_order.pk %}">Editar datos generales</a></p>
+    {% endif %}
+
+    {% if can_approve %}
+      <p><a href="{% url 'workorders:approve' work_order.pk %}">Registrar aprobación del cliente</a></p>
+    {% endif %}
+
+    {% if transition_form and transition_form.fields.status.choices %}
+      <form method="post" action="{% url 'workorders:transition' work_order.pk %}">
+        {% csrf_token %}
+        {{ transition_form.as_p }}
+        <button type="submit">Cambiar estado</button>
+      </form>
+    {% endif %}
+
+    <h2>Servicios y repuestos</h2>
+    <ul>
+      {% for line in work_order.lines.all %}
+        <li>
+          {{ line.description_snapshot }} — {{ line.quantity }}
+          {% if can_see_prices %}
+            × S/ {{ line.unit_price }} = S/ {{ line.line_total }}
+          {% endif %}
+          {% if line.stock_deducted %} — Stock descontado{% elif line.line_type == "part" %} — Pendiente de descontar al iniciar el trabajo{% endif %}
+          {% if can_add_line and work_order.status != "in_progress" %}
+            <form method="post" action="{% url 'workorders:remove_line' work_order.pk line.pk %}">
+              {% csrf_token %}
+              <button type="submit">Retirar antes de solicitar aprobación</button>
+            </form>
+          {% endif %}
+        </li>
+      {% empty %}
+        <li>Aún no hay líneas en la orden.</li>
+      {% endfor %}
+    </ul>
+    {% if can_see_prices %}
+      <p><strong>Total referencial: S/ {{ work_order.total }}</strong></p>
+      <p>Los impuestos se definirán en el cálculo final del presupuesto; este total no es un comprobante fiscal.</p>
+    {% endif %}
+    {% if can_add_line and line_form %}
+      <h3>Añadir servicio o repuesto</h3>
+      <p>El precio se copia del catálogo en el servidor. Los repuestos se descuentan al iniciar el trabajo.</p>
+      <form method="post" action="{% url 'workorders:add_line' work_order.pk %}">
+        {% csrf_token %}
+        {{ line_form.as_p }}
+        <button type="submit">Añadir línea</button>
+      </form>
+    {% endif %}
+    {% if can_update_work and technician_form %}
+      <h3>Actualizar diagnóstico y notas</h3>
+      <form method="post" action="{% url 'workorders:update_assigned' work_order.pk %}">
+        {% csrf_token %}
+        {{ technician_form.as_p }}
+        <button type="submit">Guardar diagnóstico</button>
+      </form>
+    {% endif %}
+
+    {% if work_order.customer_approval and can_see_approval %}
+      <h2>Aprobación del cliente</h2>
+      <p>
+        {{ work_order.customer_approval.get_channel_display }} —
+        {{ work_order.customer_approval.evidence_note }} —
+        {% if work_order.customer_approval.recorded_by %}
+          registrada por {{ work_order.customer_approval.recorded_by }}
+        {% else %}
+          confirmada por el cliente mediante Telegram
+        {% endif %}
+        el {{ work_order.customer_approval.approved_at }}
+      </p>
+    {% endif %}
+
+    <h2>Historial de la orden</h2>
+    <ol>
+      {% for event in work_order.events.all %}
+        <li>
+          {{ event.created_at }} — {{ event.get_event_type_display }} —
+          {{ event.description }} — {{ event.actor }}
+        </li>
+      {% empty %}
+        <li>Sin eventos registrados.</li>
+      {% endfor %}
+    </ol>
+  </main>
+</body>
+</html>

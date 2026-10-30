@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Ingresar al portal | Taller</title>
+</head>
+<body>
+  <main>
+    <h1>Portal del cliente</h1>
+    <p>Ingresa el código temporal que te entregó el personal del taller. El DNI no es una contraseña.</p>
+    {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <p>
+        <label for="id_code">Código de acceso</label>
+        <input id="id_code" name="code" type="text" maxlength="128" required autocomplete="off" autofocus>
+      </p>
+      <button type="submit">Ingresar</button>
+    </form>
+  </main>
+</body>
+</html>

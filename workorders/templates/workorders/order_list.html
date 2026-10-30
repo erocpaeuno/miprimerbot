@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Órdenes de trabajo | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>Órdenes de trabajo</h1>
+    <nav aria-label="Gestión del taller">
+      <a href="{% url 'customers:customer_list' %}">Clientes</a>
+      <a href="{% url 'customers:motorcycle_list' %}">Motocicletas</a>
+      <a href="{% url 'catalog:service_list' %}">Servicios</a>
+      <a href="{% url 'inventory:part_list' %}">Inventario</a>
+    </nav>
+    {% if can_manage %}
+      <p><a href="{% url 'workorders:create' %}">Crear orden</a></p>
+    {% endif %}
+    <form method="get">
+      <label for="q">Buscar por número, cliente o placa</label>
+      <input id="q" name="q" value="{{ query }}">
+      <label for="status">Estado</label>
+      <select id="status" name="status">
+        <option value="">Todos</option>
+        {% for value, label in statuses %}
+          <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
+            {{ label }}
+          </option>
+        {% endfor %}
+      </select>
+      <button type="submit">Filtrar</button>
+    </form>
+    <ul>
+      {% for order in orders %}
+        <li>
+          <a href="{{ order.get_absolute_url }}">{{ order.order_number }}</a>
+          — {{ order.customer.full_name }} — {{ order.motorcycle.plate }}
+          — {{ order.get_status_display }}
+          {% if order.assigned_to %} — Técnico: {{ order.assigned_to.get_full_name|default:order.assigned_to.username }}{% endif %}
+        </li>
+      {% empty %}
+        <li>No hay órdenes para mostrar.</li>
+      {% endfor %}
+    </ul>
+  </main>
+</body>
+</html>

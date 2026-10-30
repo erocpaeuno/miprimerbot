@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Registrar aprobación | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>Registrar aprobación de {{ work_order.order_number }}</h1>
+    <p>
+      Esta pantalla registra manualmente una confirmación recibida por el
+      personal. Si el cliente tiene Telegram vinculado y consintió los avisos,
+      puede responder al presupuesto directamente desde el bot.
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Registrar aprobación</button>
+    </form>
+    <p><a href="{{ work_order.get_absolute_url }}">Volver a la orden</a></p>
+  </main>
+</body>
+</html>

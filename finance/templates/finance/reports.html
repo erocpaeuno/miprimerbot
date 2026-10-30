@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Reportes financieros | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <p><a href="{% url 'finance:index' %}">Volver a caja</a></p>
+    <h1>Reportes financieros</h1>
+    <form method="get">
+      {{ form.as_p }}
+      <button type="submit">Consultar</button>
+    </form>
+    {% if report %}
+      <p>Periodo: {{ report.start_date }} a {{ report.end_date }}</p>
+      <h2>Resumen por medio de pago</h2>
+      <table>
+        <thead><tr><th>Medio</th><th>Ingresos</th><th>Egresos</th></tr></thead>
+        <tbody>
+          {% for row in report.method_summary %}
+            <tr>
+              <th>{{ row.label }}</th>
+              <td>S/ {{ row.payments }}</td>
+              <td>S/ {{ row.expenses }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p>Total ingresos: S/ {{ report.payment_total }}</p>
+      <p>Total egresos: S/ {{ report.expense_total }}</p>
+      <p>Ingresos menos egresos: S/ {{ report.net_total }}</p>
+
+      <h2>Pagos</h2>
+      <ul>
+        {% for payment in report.payments %}
+          <li>{{ payment.created_at }} — {{ payment.work_order.order_number }} —
+            {{ payment.get_method_display }} — S/ {{ payment.amount }} —
+            {{ payment.created_by }}</li>
+        {% empty %}
+          <li>No hay pagos en el periodo.</li>
+        {% endfor %}
+      </ul>
+      <h2>Egresos</h2>
+      <ul>
+        {% for expense in report.expenses %}
+          <li>{{ expense.created_at }} — {{ expense.get_category_display }} —
+            {{ expense.description }} — {{ expense.get_method_display }} —
+            S/ {{ expense.amount }} — {{ expense.created_by }}</li>
+        {% empty %}
+          <li>No hay egresos en el periodo.</li>
+        {% endfor %}
+      </ul>
+      <h2>Cierres de caja</h2>
+      <ul>
+        {% for session in report.sessions %}
+          <li>{{ session.closed_at }} — abrió {{ session.opened_by }},
+            cerró {{ session.closed_by }} — efectivo esperado
+            S/ {{ session.expected_cash }}, contado S/ {{ session.counted_cash }},
+            diferencia S/ {{ session.difference_cash }}</li>
+        {% empty %}
+          <li>No hay cierres en el periodo.</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </main>
+</body>
+</html>

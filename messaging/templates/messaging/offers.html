@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Ofertas por Telegram | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>Ofertas por Telegram</h1>
+    <p><a href="{% url 'finance:index' %}">Caja</a></p>
+    {% if messages %}
+      <ul>{% for message in messages %}<li role="status">{{ message }}</li>{% endfor %}</ul>
+    {% endif %}
+    <p>Clientes con vínculo activo y consentimiento vigente: {{ accounts_count }}.</p>
+    <p>Mensajes pendientes en la cola: {{ queued_count }}.</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Encolar oferta para clientes consentidos</button>
+    </form>
+    <h2>Campañas recientes</h2>
+    <ul>
+      {% for campaign in campaigns %}
+        <li>{{ campaign.created_at }} — {{ campaign.created_by }} — {{ campaign.message }}</li>
+      {% empty %}
+        <li>No hay campañas registradas.</li>
+      {% endfor %}
+    </ul>
+  </main>
+</body>
+</html>

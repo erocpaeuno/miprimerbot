@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Movimiento de inventario | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>Movimiento de inventario</h1>
+    <p>{{ part.name }} ({{ part.sku }}) — existencia: {{ part.stock }} {{ part.unit }}</p>
+    <p>En un ajuste, ingresa la cantidad física contada. El sistema conservará el ajuste en el historial.</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Registrar movimiento</button>
+    </form>
+    <p><a href="{{ part.get_absolute_url }}">Volver al repuesto</a></p>
+  </main>
+</body>
+</html>

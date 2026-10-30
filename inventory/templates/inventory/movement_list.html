@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Movimientos | Inventario</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>Movimientos de inventario</h1>
+    <ul>
+      {% for movement in movements %}
+        <li>
+          <a href="{{ movement.part.get_absolute_url }}">{{ movement.part }}</a>
+          — {{ movement.get_movement_type_display }} {{ movement.quantity }}
+          {% if movement.work_order %}
+            — Orden <a href="{{ movement.work_order.get_absolute_url }}">{{ movement.work_order.order_number }}</a>
+          {% endif %}
+          — {{ movement.note }} — {{ movement.created_at }}
+          — {{ movement.created_by }}
+        </li>
+      {% empty %}
+        <li>No hay movimientos registrados.</li>
+      {% endfor %}
+    </ul>
+    <p><a href="{% url 'inventory:part_list' %}">Volver al inventario</a></p>
+  </main>
+</body>
+</html>

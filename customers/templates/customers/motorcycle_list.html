@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Motocicletas | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>Motocicletas</h1>
+    <nav aria-label="Navegación de clientes y motocicletas">
+      <a href="{% url 'customers:customer_list' %}">Clientes</a>
+      <a href="{% url 'customers:motorcycle_list' %}">Motocicletas</a>
+    </nav>
+    <p><a href="{% url 'customers:motorcycle_create' %}">Registrar motocicleta</a></p>
+    <form method="get">
+      <label for="q">Buscar por placa, marca, modelo o cliente</label>
+      <input id="q" name="q" value="{{ query }}">
+      <button type="submit">Buscar</button>
+    </form>
+    <ul>
+      {% for motorcycle in motorcycles %}
+        <li>
+          <a href="{{ motorcycle.get_absolute_url }}">{{ motorcycle }}</a>
+          — <a href="{{ motorcycle.customer.get_absolute_url }}">
+            {{ motorcycle.customer.full_name }}
+          </a>
+        </li>
+      {% empty %}
+        <li>No hay motocicletas registradas.</li>
+      {% endfor %}
+    </ul>
+  </main>
+</body>
+</html>

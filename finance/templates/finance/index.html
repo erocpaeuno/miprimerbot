@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Caja | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>Caja del taller</h1>
+    <nav aria-label="Gestión del taller">
+      <a href="{% url 'workorders:list' %}">Órdenes</a>
+      <a href="{% url 'finance:reports' %}">Reportes financieros</a>
+    </nav>
+    {% if messages %}
+      <ul>{% for message in messages %}<li role="status">{{ message }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    {% if session %}
+      <section>
+        {% if open_form and open_form.errors %}
+          <div role="alert">{{ open_form.errors }}</div>
+        {% endif %}
+        <h2>Caja abierta</h2>
+        <p>Abierta {{ session.opened_at }} por {{ session.opened_by }}.</p>
+        <p>Fondo inicial: S/ {{ session.opening_cash }}</p>
+        {% if can_operate %}
+          <p>Efectivo esperado: S/ {{ expected_cash }}</p>
+          <h3>Registrar pago de orden</h3>
+          <form method="post" action="{% url 'finance:payment_create' %}">
+            {% csrf_token %}
+            {{ payment_form.as_p }}
+            <button type="submit">Registrar pago</button>
+          </form>
+
+          <h3>Registrar egreso</h3>
+          <form method="post" action="{% url 'finance:expense_create' %}">
+            {% csrf_token %}
+            {{ expense_form.as_p }}
+            <button type="submit">Registrar egreso</button>
+          </form>
+
+          <h3>Cerrar caja</h3>
+          <p>Cuenta el efectivo físico. El sistema comparará el monto con el efectivo esperado.</p>
+          <form method="post" action="{% url 'finance:close' %}">
+            {% csrf_token %}
+            {{ close_form.as_p }}
+            <button type="submit">Cerrar caja</button>
+          </form>
+        {% else %}
+          <p>Esta caja solo puede operarla quien la abrió o administración.</p>
+        {% endif %}
+        <h3>Pagos de esta sesión</h3>
+        <ul>
+          {% for payment in session.payments.all %}
+            <li>
+              {{ payment.created_at }} —
+              <a href="{{ payment.work_order.get_absolute_url }}">{{ payment.work_order.order_number }}</a> —
+              {{ payment.get_method_display }} — S/ {{ payment.amount }}
+            </li>
+          {% empty %}
+            <li>Aún no se registran pagos.</li>
+          {% endfor %}
+        </ul>
+        <h3>Egresos de esta sesión</h3>
+        <ul>
+          {% for expense in session.expenses.all %}
+            <li>{{ expense.created_at }} — {{ expense.description }} —
+              {{ expense.get_method_display }} — S/ {{ expense.amount }}</li>
+          {% empty %}
+            <li>Aún no se registran egresos.</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% else %}
+      <section>
+        <h2>Abrir caja</h2>
+        <form method="post" action="{% url 'finance:open' %}">
+          {% csrf_token %}
+          {{ open_form.as_p }}
+          <button type="submit">Abrir caja</button>
+        </form>
+      </section>
+    {% endif %}
+
+    <section>
+      <h2>Sesiones recientes</h2>
+      <ul>
+        {% for item in sessions %}
+          <li>
+            {{ item.opened_at }} — {{ item.opened_by }} —
+            {% if item.is_open %}Abierta{% else %}
+              Cerrada {{ item.closed_at }}; esperado S/ {{ item.expected_cash }},
+              contado S/ {{ item.counted_cash }}, diferencia S/ {{ item.difference_cash }}
+            {% endif %}
+          </li>
+        {% empty %}
+          <li>No hay sesiones registradas.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

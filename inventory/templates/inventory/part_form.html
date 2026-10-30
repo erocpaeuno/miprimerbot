@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>{{ title }} | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>{{ title }}</h1>
+    {% if part %}<p>Existencia actual: {{ part.stock }} {{ part.unit }}</p>{% endif %}
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Guardar</button>
+    </form>
+    <p><a href="{% url 'inventory:part_list' %}">Volver a repuestos</a></p>
+  </main>
+</body>
+</html>

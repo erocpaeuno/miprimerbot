@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>{{ customer.full_name }} | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>{{ customer.full_name }}</h1>
+    <dl>
+      <dt>DNI</dt><dd>{{ customer.dni|default:"No registrado" }}</dd>
+      <dt>Teléfono</dt><dd>{{ customer.phone }}</dd>
+      <dt>Correo</dt><dd>{{ customer.email|default:"No registrado" }}</dd>
+      <dt>Notas</dt><dd>{{ customer.notes|default:"Sin notas" }}</dd>
+    </dl>
+    <p><a href="{% url 'customers:customer_update' customer.pk %}">Editar cliente</a></p>
+    <section>
+      <h2>Portal del cliente</h2>
+      {% if portal_code %}
+        <p role="status">Código de acceso de un solo uso, válido por 15 minutos. Entrégalo únicamente al cliente verificado:</p>
+        <p><strong>{{ portal_code }}</strong></p>
+        <p>El cliente ingresa este código en <code>/portal-cliente/ingresar/</code>. No uses su DNI como contraseña.</p>
+      {% else %}
+        <p>Emite un código temporal después de verificar presencialmente la identidad del cliente.</p>
+        <form method="post" action="{% url 'customers:customer_portal_code' customer.pk %}">
+          {% csrf_token %}
+          <button type="submit">Generar código para el portal</button>
+        </form>
+      {% endif %}
+    </section>
+    <section>
+      <h2>Cuenta de Telegram</h2>
+      {% if telegram_account and telegram_account.is_active %}
+        <p>Vinculación activa.</p>
+        <p>Avisos de trabajos: {% if telegram_account.work_updates_consent %}consentidos{% else %}no consentidos{% endif %}.</p>
+        <p>Ofertas: {% if telegram_account.offers_consent %}consentidas{% else %}no consentidas{% endif %}.</p>
+      {% else %}
+        <p>No hay una cuenta vinculada.</p>
+      {% endif %}
+      {% if telegram_link_token %}
+        <p role="status">Código de un solo uso, válido por 15 minutos. Entrégalo únicamente al cliente verificado:</p>
+        <p><strong>{{ telegram_link_token }}</strong></p>
+        {% if telegram_bot_username %}
+          <p>El cliente debe abrir el bot @{{ telegram_bot_username }} y enviar <code>/start {{ telegram_link_token }}</code>.</p>
+        {% else %}
+          <p>El cliente debe enviar <code>/start {{ telegram_link_token }}</code> al bot configurado.</p>
+        {% endif %}
+        <p>El código vincula la cuenta, pero no activa avisos ni ofertas. El cliente elige cada consentimiento en el bot.</p>
+      {% elif not telegram_account or not telegram_account.is_active %}
+        <form method="post" action="{% url 'customers:customer_telegram_link' customer.pk %}">
+          {% csrf_token %}
+          <button type="submit">Generar código de vinculación</button>
+        </form>
+      {% endif %}
+    </section>
+    <h2>Motocicletas</h2>
+    <ul>
+      {% for motorcycle in customer.motorcycles.all %}
+        <li><a href="{{ motorcycle.get_absolute_url }}">{{ motorcycle }}</a></li>
+      {% empty %}
+        <li>Este cliente todavía no tiene motocicletas registradas.</li>
+      {% endfor %}
+    </ul>
+    <p>
+      <a href="{% url 'customers:motorcycle_create' %}?customer={{ customer.pk }}">
+        Registrar motocicleta
+      </a>
+    </p>
+    <p><a href="{% url 'customers:customer_list' %}">Volver a clientes</a></p>
+  </main>
+</body>
+</html>

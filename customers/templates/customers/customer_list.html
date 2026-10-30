@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Clientes | Taller</title>
+</head>
+<body>
+  <main>
+    {% include "core/back_to_panel.html" %}
+    <h1>Clientes</h1>
+    <nav aria-label="Navegación de clientes y motocicletas">
+      <a href="{% url 'customers:customer_list' %}">Clientes</a>
+      <a href="{% url 'customers:motorcycle_list' %}">Motocicletas</a>
+    </nav>
+    <p><a href="{% url 'customers:customer_create' %}">Registrar cliente</a></p>
+    <form method="get">
+      <label for="q">Buscar por nombre, teléfono o DNI</label>
+      <input id="q" name="q" value="{{ query }}">
+      <button type="submit">Buscar</button>
+    </form>
+    <ul>
+      {% for customer in customers %}
+        <li>
+          <a href="{{ customer.get_absolute_url }}">{{ customer.full_name }}</a>
+          — {{ customer.phone }}
+        </li>
+      {% empty %}
+        <li>No hay clientes registrados.</li>
+      {% endfor %}
+    </ul>
+  </main>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "core/styles.html" %}
+  <title>Mis órdenes | Taller</title>
+</head>
+<body>
+  <main>
+    <h1>Hola, {{ customer.full_name }}</h1>
+    <p>Este acceso es temporal y vence después de 12 horas.</p>
+    {% if messages %}
+      {% for message in messages %}<p role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}">{{ message }}</p>{% endfor %}
+    {% endif %}
+    <form method="post" action="{% url 'customer_portal:logout' %}">
+      {% csrf_token %}
+      <button type="submit">Cerrar portal</button>
+    </form>
+
+    <h2>Mis órdenes de trabajo</h2>
+    {% for order in work_orders %}
+      <section>
+        <h3>{{ order.order_number }} — {{ order.get_status_display }}</h3>
+        <p>Motocicleta: {{ order.motorcycle.plate }} — {{ order.motorcycle.make }} {{ order.motorcycle.model }}</p>
+        <p>Fecha: {{ order.created_at|date:"d/m/Y H:i" }}</p>
+        <p>Motivo de ingreso: {{ order.complaint }}</p>
+        {% if order.diagnosis %}
+          <p>Diagnóstico: {{ order.diagnosis }}</p>
+        {% endif %}
+        {% if order.lines.all %}
+          <h4>Servicios y repuestos registrados</h4>
+          <ul>
+            {% for line in order.lines.all %}
+              <li>{{ line.description_snapshot }} — {{ line.quantity }} × S/ {{ line.unit_price }} = S/ {{ line.line_total }}</li>
+            {% endfor %}
+          </ul>
+          <p><strong>Total referencial: S/ {{ order.total }}</strong></p>
+        {% endif %}
+        {% if order.status == "waiting_approval" %}
+          <p>Indica si aceptas este presupuesto. El taller registrará tu respuesta.</p>
+          <form method="post" action="{% url 'customer_portal:order_response' order.pk %}">
+            {% csrf_token %}
+            <button type="submit" name="decision" value="approve">Aprobar presupuesto</button>
+            <button type="submit" name="decision" value="reject">Rechazar presupuesto</button>
+          </form>
+        {% endif %}
+      </section>
+    {% empty %}
+      <p>Todavía no hay órdenes disponibles para mostrar.</p>
+    {% endfor %}
+    <p>Los importes son referenciales y no reemplazan un comprobante de pago.</p>
+  </main>
+</body>
+</html>
