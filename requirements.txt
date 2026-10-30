@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 Django>=5.2,<5.3
 djangorestframework>=3.16,<4.0
 psycopg[binary]>=3.2,<4.0
 gunicorn>=23,<24
 whitenoise>=6.8,<7.0
-=======
 python-telegram-bot==21.10
->>>>>>> dab05548ff545ca251f478442852e6198cd842b8
