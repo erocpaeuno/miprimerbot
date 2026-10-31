@@ -1,4 +1,5 @@
 from datetime import timedelta
+from time import sleep
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -24,6 +25,12 @@ class Command(BaseCommand):
             action="store_true",
             help="Reintenta fallos con menos de cinco intentos.",
         )
+        parser.add_argument(
+            "--watch",
+            action="store_true",
+            help="Mantiene el proceso activo y revisa la cola periódicamente.",
+        )
+        parser.add_argument("--interval", type=int, default=10)
 
     def handle(self, *args, **options):
         if not settings.TELEGRAM_BOT_TOKEN:
@@ -31,6 +38,25 @@ class Command(BaseCommand):
         limit = options["limit"]
         if limit < 1 or limit > 1000:
             raise CommandError("--limit debe estar entre 1 y 1000.")
+        interval = options["interval"]
+        if interval < 1 or interval > 300:
+            raise CommandError("--interval debe estar entre 1 y 300.")
+
+        retry_failed = options["retry_failed"]
+        while True:
+            counts = self._send_pending(limit, retry_failed)
+            if not options["watch"] or any(counts):
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"Telegram: {counts[0]} enviado(s), "
+                        f"{counts[1]} fallido(s), {counts[2]} cancelado(s)."
+                    )
+                )
+            if not options["watch"]:
+                return
+            sleep(interval)
+
+    def _send_pending(self, limit, retry_failed):
         now = timezone.now()
         TelegramOutbox.objects.filter(
             status=TelegramOutbox.Status.SENDING,
@@ -39,7 +65,7 @@ class Command(BaseCommand):
             status=TelegramOutbox.Status.PENDING,
             processing_at=None,
         )
-        if options["retry_failed"]:
+        if retry_failed:
             TelegramOutbox.objects.filter(
                 status=TelegramOutbox.Status.FAILED,
                 attempts__lt=5,
@@ -93,9 +119,4 @@ class Command(BaseCommand):
                 telegram_message_id=telegram_message_id,
             )
             sent += 1
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Telegram: {sent} enviado(s), {failed} fallido(s), "
-                f"{cancelled} cancelado(s)."
-            )
-        )
+        return sent, failed, cancelled

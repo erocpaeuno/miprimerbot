@@ -360,9 +360,8 @@ de estáticos, migraciones al iniciar y Gunicorn. WhiteNoise sirve los archivos
 estáticos recopilados. No aprovisiona otra base: reutiliza la instancia
 PostgreSQL ya creada.
 
-1. Sube el código a un repositorio Git privado y crea un Blueprint en Render
-   conectado a ese repositorio. Este directorio de trabajo todavía no está
-   conectado a un repositorio Git.
+1. Publica los cambios en el repositorio Git y crea un Blueprint en Render
+   conectado a ese repositorio.
 2. Al crear el Blueprint, elige el plan del servicio y configura `DATABASE_URL`
    con la URL interna de PostgreSQL si la base está en Render y en la misma
    región. Cárgala únicamente en el panel seguro de Render, no en `render.yaml`,
@@ -380,10 +379,13 @@ PostgreSQL ya creada.
    instancia web durante la primera puesta en marcha; si escalas el servicio,
    ejecuta las migraciones una sola vez antes de iniciar instancias nuevas.
 
-El archivo de Blueprint no incorpora credenciales ni configura Telegram. Los
-secretos de Telegram se añadirán manualmente en el panel de Render cuando el
-bot vaya a activarse. No se ha creado un servicio real ni validado el despliegue
-porque todavía falta conectar el repositorio y configurar `DATABASE_URL`.
+El Blueprint comparte la configuración de producción y la URL de PostgreSQL
+entre el servicio web y el worker de Telegram. Al crear el Blueprint, Render
+pedirá `DATABASE_URL`, `TELEGRAM_BOT_TOKEN` y `TELEGRAM_WEBHOOK_SECRET`.
+Configura la URL y el token en el grupo compartido, y el secreto del webhook
+solo en el servicio web. No se ha creado un servicio real ni validado el
+despliegue porque todavía falta conectar el repositorio y configurar esos
+secretos.
 
 ### Respaldo y restauración de PostgreSQL
 
@@ -434,12 +436,13 @@ porque todavía falta conectar el repositorio y configurar `DATABASE_URL`.
    python manage.py set_telegram_webhook --url https://<dominio>/telegram/webhook/
    ```
 
-3. Programa `python manage.py send_telegram_outbox --retry-failed` para
-   ejecutarse periódicamente (por ejemplo, cada minuto) en el mismo entorno
-   que accede a la base de datos. El webhook guarda respuestas y mensajes en
-   una cola; el comando los envía y registra fallos. Reintenta hasta cinco
-   veces; después de eso, inspecciona el fallo y, si corresponde, reencola con
-   `python manage.py requeue_telegram_message --message-id <id>`.
+3. En Render, verifica que `TELEGRAM_BOT_TOKEN` esté configurado en el grupo
+   compartido por ambos servicios y que `TELEGRAM_WEBHOOK_SECRET` esté definido
+   en el servicio web. El worker procesa la cola cada 10 segundos; el comando
+   también puede ejecutarse una sola vez con
+   `python manage.py send_telegram_outbox`. Los mensajes fallidos se reintentan
+   hasta cinco veces; después inspecciona el fallo y, si corresponde, reencola
+   con `python manage.py requeue_telegram_message --message-id <id>`.
 4. En la ficha del cliente, personal autorizado genera un código tras verificar
    presencialmente su identidad y se lo entrega al cliente. El cliente abre el
    bot y envía `/start <código>`. Después puede elegir `/avisos on` y
@@ -448,6 +451,10 @@ porque todavía falta conectar el repositorio y configurar `DATABASE_URL`.
 El bot opera en chats privados. No se debe compartir el código de vínculo con
 terceras personas: permite asociar ese chat al cliente hasta su vencimiento o
 primer uso.
+
+El despliegue usa el webhook integrado de Django. No ejecutes `main.py` con el
+mismo token: ese script usa sondeo (polling), incompatible con el webhook
+registrado para Telegram.
 
 `IGV_RATE` puede sobrescribirse si cambia la tasa aplicable. La configuración
 actual solo establece el valor; los cálculos de impuestos se implementarán y

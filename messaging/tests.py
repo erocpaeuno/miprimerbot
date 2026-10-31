@@ -539,6 +539,32 @@ class TelegramIntegrationTests(TestCase):
         self.assertEqual(outgoing.last_error, "chat not found")
         self.assertNotIn("test-token", outgoing.last_error)
 
+    @override_settings(TELEGRAM_BOT_TOKEN="test-token")
+    def test_outbox_watch_repeats_until_interrupted(self):
+        from messaging.management.commands.send_telegram_outbox import (
+            Command as OutboxCommand,
+        )
+
+        command = OutboxCommand()
+        with (
+            patch.object(command, "_send_pending", return_value=(0, 0, 0)) as send,
+            patch(
+                "messaging.management.commands.send_telegram_outbox.sleep",
+                side_effect=[None, KeyboardInterrupt],
+            ),
+        ):
+            with self.assertRaises(KeyboardInterrupt):
+                command.handle(
+                    limit=100,
+                    retry_failed=True,
+                    watch=True,
+                    interval=10,
+                )
+
+        self.assertEqual(send.call_count, 2)
+        self.assertEqual(send.call_args_list[0].args, (100, True))
+        self.assertEqual(send.call_args_list[1].args, (100, True))
+
     def test_failed_outbox_message_can_be_requeued_explicitly(self):
         from django.core.management import call_command
 
