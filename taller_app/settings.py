@@ -4,6 +4,17 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
 from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
+
+# 1. Definimos primero BASE_DIR para conocer la ubicación raíz del proyecto
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# 2. Apuntamos explícitamente a la ruta absoluta del archivo .env en la raíz
+dot_env_path = BASE_DIR / ".env"
+if dot_env_path.exists():
+    load_dotenv(dotenv_path=dot_env_path)
+else:
+    load_dotenv()
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
