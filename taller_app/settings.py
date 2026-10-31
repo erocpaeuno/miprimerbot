@@ -169,7 +169,7 @@ REST_FRAMEWORK = {
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 
-# Bypass defensivo para la fase de construcción en Render
+# Solución de Escape para la fase de compilación en Render
 if not DATABASE_URL and os.environ.get("RENDER"):
     DATABASE_URL = "postgresql://temporal_user:temporal_pass@localhost:5432/temporal_db"
 
@@ -210,28 +210,16 @@ else:
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": (
-            "django.contrib.auth.password_validation."
-            "UserAttributeSimilarityValidator"
-        )
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
     {
-        "NAME": (
-            "django.contrib.auth.password_validation."
-            "MinimumLengthValidator"
-        )
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"
     },
     {
-        "NAME": (
-            "django.contrib.auth.password_validation."
-            "CommonPasswordValidator"
-        )
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"
     },
     {
-        "NAME": (
-            "django.contrib.auth.password_validation."
-            "NumericPasswordValidator"
-        )
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"
     },
 ]
 
