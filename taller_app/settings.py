@@ -17,9 +17,6 @@ else:
     load_dotenv()
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-
 def env_bool(name, default):
     value = os.environ.get(name)
     if value is None:
@@ -171,10 +168,16 @@ REST_FRAMEWORK = {
 }
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+
+# Solución de Escape para la fase de compilación en Render
+if not DATABASE_URL and os.environ.get("RENDER"):
+    DATABASE_URL = "postgresql://temporal_user:temporal_pass@localhost:5432/temporal_db"
+
 DB_ENGINE = os.environ.get(
     "DB_ENGINE",
     "postgresql" if DATABASE_URL else "sqlite",
 ).strip().lower()
+
 if DATABASE_URL:
     DATABASES = {"default": postgres_database_from_url(DATABASE_URL)}
 elif DB_ENGINE == "postgresql":
@@ -259,6 +262,7 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool(
 SECURE_HSTS_PRELOAD = env_bool("DJANGO_SECURE_HSTS_PRELOAD", False)
 if env_bool("DJANGO_USE_X_FORWARDED_PROTO", False):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 if not DEBUG and not SECURE_SSL_REDIRECT and not env_bool(
     "DJANGO_USE_X_FORWARDED_PROTO",
     False,
@@ -276,26 +280,6 @@ CURRENCY_SYMBOL = "S/"
 try:
     IGV_RATE = Decimal(os.environ.get("IGV_RATE", "0.18"))
 except InvalidOperation as exc:
-    raise ImproperlyConfigured("IGV_RATE debe ser un valor decimal.") from exc
+    raise ImproperlyConfigured("IGV_RATE debe ser un value decimal.") from exc
 if not IGV_RATE.is_finite() or not Decimal("0") <= IGV_RATE <= Decimal("1"):
     raise ImproperlyConfigured("IGV_RATE debe estar entre 0 y 1.")
-
-STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-staticfiles_backend = (
-    "django.contrib.staticfiles.storage.StaticFilesStorage"
-    if DEBUG
-    else "whitenoise.storage.CompressedManifestStaticFilesStorage"
-)
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": staticfiles_backend,
-    },
-}
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
-TELEGRAM_BOT_USERNAME = os.environ.get("TELEGRAM_BOT_USERNAME", "").strip()
-TELEGRAM_WEBHOOK_SECRET = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "").strip()
